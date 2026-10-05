@@ -1,0 +1,13 @@
+{
+  "name": "ittybittytrucks",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Little trucks. A very big hello.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && node scripts/serve.mjs",
+    "preview": "node scripts/serve.mjs"
+  },
+  "engines": { "node": ">=20" }
+}
