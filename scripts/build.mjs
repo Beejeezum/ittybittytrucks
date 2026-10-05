@@ -11,6 +11,7 @@ const pages = [
   ['trucks', 'trucks', 'Meet the trucks — Itty Bitty Trucks', 'Meet Bruce’s tiny turquoise Subaru Sambar, check available trucks, or put together a wish list for your own.'],
   ['sambar', 'trucks/teal-sambar', 'Oh, hey. You found me. — The Tiny Teal Truck', 'You found Bruce’s turquoise 2000 Subaru Sambar TT2. Get to know this little truck and find out about owning one.'],
   ['guide', 'tiny-truck-101', 'Tiny truck 101 — Itty Bitty Trucks', 'A friendly introduction to Japanese kei trucks, from their tiny proportions to the questions to ask before buying one.'],
+  ['story', 'our-story', 'How this little thing started — Itty Bitty Trucks', 'Bruce’s route into kei trucks: a Subaru Sambar from Japan, a 1957 Chevy color inspiration, and a home in Boca Raton.'],
   ['request', 'find-me-one', 'Find your itty bitty truck', 'Put together a wish list for a tiny truck: budget, location, how you will use it, and the things you care about.'],
   ['404', '404', 'A little lost? — Itty Bitty Trucks', 'Let’s get you back to the little trucks.']
 ];

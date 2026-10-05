@@ -4,7 +4,7 @@ A little home for Japanese kei trucks, roadside discoveries, and the people who 
 
 **Primary domain:** ittybittytrucks.com  
 **Companion domain:** ittybittytruck.com  
-**Status:** First site concept for review. Custom domains and business email are not activated by this repository.
+**Status:** Public first version, with expanded owner and truck stories. Custom domains and business email still need activation. The GitHub copy is pending connection access to Beejeezum.
 
 ## Run it
 
@@ -31,6 +31,7 @@ The static site is written to `dist/`. The build creates individual HTML pages a
 | `/trucks/teal-sambar/` | Bruce’s 2000 Subaru Sambar TT2 profile |
 | `/hi/teal/` | Permanent printed-QR route to the Sambar profile |
 | `/tiny-truck-101/` | A sourced introduction and buying questions |
+| `/our-story/` | Bruce’s route into ownership and the business he is building |
 | `/find-me-one/` | A truck wish-list builder |
 
 The wish-list builder currently creates a draft in the visitor’s browser. It can copy the draft, preserve the visitor’s Sambar reference, and return to editing. It does not store or submit personal information, and it does not pretend to have sent an inquiry.
@@ -42,6 +43,8 @@ After the business mailbox is verified, set `emailReady` to `true` in `site.conf
 - [Brand and site plan](docs/brand-and-site-plan.md)
 - [Domain email setup](docs/email-setup.md)
 - [Launch and content handoff](docs/launch.md)
+- [Connect the two domains](docs/domain-setup.md)
+- [Story sources and editorial decisions](docs/story-sources.md)
 
 The visual direction uses large expressive typography, yellow, dark ink, turquoise, and a restrained red accent. The truck art is a clearly illustrated concept asset, not a photograph or exact representation of inventory. Replace the profile illustration with Bruce’s real photographs before treating that page as a finished vehicle presentation.
 
