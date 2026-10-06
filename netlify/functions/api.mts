@@ -53,9 +53,9 @@ async function readBounded(request: Request, limit: number) {
   return bytes;
 }
 
-async function readJson(request: Request, limit = 4096) {
+async function readJson(request: Request) {
   if (!request.headers.get('Content-Type')?.startsWith('application/json')) throw new HttpError(415, 'Please use the form on this page.');
-  const bytes = await readBounded(request, limit);
+  const bytes = await readBounded(request, 4096);
   try {
     const data = JSON.parse(new TextDecoder().decode(bytes));
     if (data && typeof data === 'object' && !Array.isArray(data)) return data as Record<string, unknown>;
@@ -201,69 +201,6 @@ async function requireOwner() {
   if (!owner || user.email?.trim().toLowerCase() !== owner) throw new HttpError(403, 'This dashboard is private to Bruce.');
 }
 
-const temporaryMigrationHash = '707248520e4d28802ed0e568607c05b69096b08060f7526431f71b16954d1721';
-
-async function requireMigrationToken(request: Request) {
-  const token = request.headers.get('X-Migration-Token') || '';
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
-  const actual = Array.from(new Uint8Array(digest), (n) => n.toString(16).padStart(2, '0')).join('');
-  if (actual !== temporaryMigrationHash) throw new HttpError(404, 'Not found.');
-}
-
-async function importRows(request: Request) {
-  await requireMigrationToken(request);
-  const payload = await readJson(request, 128 * 1024);
-  const requests = Array.isArray(payload.truck_requests) ? payload.truck_requests : [];
-  const signals = Array.isArray(payload.visitor_signals) ? payload.visitor_signals : [];
-  const visits = Array.isArray(payload.site_visits) ? payload.site_visits : [];
-  const db = getDatabase();
-
-  for (const row of requests as Record<string, unknown>[]) {
-    await db.sql`
-      INSERT INTO truck_requests (id, request_key, visitor_key, intent, contact_type, contact_value, consent, created_at, status)
-      VALUES (${String(row.id)}, ${String(row.request_key)}, ${String(row.visitor_key)}, ${String(row.intent)}, ${String(row.contact_type)}, ${String(row.contact_value)}, ${String(row.consent)}, ${String(row.created_at)}, ${String(row.status)})
-      ON CONFLICT (request_key) DO NOTHING
-    `;
-  }
-  for (const row of signals as Record<string, unknown>[]) {
-    await db.sql`
-      INSERT INTO visitor_signals (visitor_key, kind, value, created_at, updated_at)
-      VALUES (${String(row.visitor_key)}, ${String(row.kind)}, ${String(row.value)}, ${String(row.created_at)}, ${String(row.updated_at)})
-      ON CONFLICT (visitor_key, kind) DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at
-    `;
-  }
-  for (const row of visits as Record<string, unknown>[]) {
-    await db.sql`
-      INSERT INTO site_visits (id, visitor_key, started_at, last_seen_at, referrer_host, device)
-      VALUES (${String(row.id)}, ${String(row.visitor_key)}, ${String(row.started_at)}, ${String(row.last_seen_at)}, ${String(row.referrer_host || '')}, ${String(row.device)})
-      ON CONFLICT (id) DO NOTHING
-    `;
-  }
-  return reply({ ok: true, imported: { requests: requests.length, signals: signals.length, visits: visits.length } });
-}
-
-async function importPhoto(request: Request, context: Context) {
-  await requireMigrationToken(request);
-  if (request.headers.get('Content-Type') !== 'image/jpeg') throw new HttpError(415, 'Not found.');
-  const id = request.headers.get('X-Migration-ID') || '';
-  const requestKey = request.headers.get('X-Migration-Request-ID') || '';
-  const visitorKey = request.headers.get('X-Migration-Visitor-Key') || '';
-  const createdAt = request.headers.get('X-Migration-Created-At') || '';
-  if (![id, requestKey, visitorKey].every((value) => UUID.test(value)) || Number.isNaN(Date.parse(createdAt))) throw new HttpError(400, 'Not found.');
-  const bytes = await readBounded(request, MAX_PHOTO);
-  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) throw new HttpError(400, 'Not found.');
-  const objectKey = `truck-sightings/${createdAt.slice(0, 7)}/${id}.jpg`;
-  const store = photoStore(context);
-  await store.set(objectKey, bytes.slice().buffer);
-  const db = getDatabase();
-  await db.sql`
-    INSERT INTO truck_sightings (id, request_key, visitor_key, object_key, byte_size, created_at)
-    VALUES (${id}, ${requestKey}, ${visitorKey}, ${objectKey}, ${bytes.length}, ${createdAt})
-    ON CONFLICT (request_key) DO NOTHING
-  `;
-  return reply({ ok: true, imported: { photos: 1 } });
-}
-
 async function dashboard(request: Request) {
   await requireOwner();
   const url = new URL(request.url);
@@ -337,8 +274,6 @@ async function exportContacts(request: Request) {
 async function route(request: Request, context: Context) {
   const url = new URL(request.url);
   if (request.method === 'GET' && url.pathname === '/api/hello') return hello(request);
-  if (request.method === 'POST' && url.pathname === '/api/_migrate/rows') return importRows(request);
-  if (request.method === 'POST' && url.pathname === '/api/_migrate/photo') return importPhoto(request, context);
   if (url.pathname === '/api/dashboard' && request.method === 'GET') return dashboard(request);
   if (url.pathname === '/api/dashboard/export' && request.method === 'GET') return exportContacts(request);
   const photoId = url.pathname.match(/^\/api\/dashboard\/photos\/([0-9a-f-]+)$/i)?.[1];
@@ -366,8 +301,6 @@ export default async (request: Request, context: Context) => {
 export const config: Config = {
   path: [
     '/api/hello',
-    '/api/_migrate/rows',
-    '/api/_migrate/photo',
     '/api/signal',
     '/api/contact',
     '/api/photo',
