@@ -7,6 +7,12 @@
   NODE_VERSION = "22.13.0"
 
 [[redirects]]
+  from = "https://ittybittytruck.com/*"
+  to = "https://ittybittytrucks.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
   from = "/dashboard"
   to = "/dashboard.html"
   status = 200

@@ -34,3 +34,10 @@ test('brand, social sharing, and install metadata use the approved assets', asyn
   assert.equal(social.readUInt32BE(16), 1200);
   assert.equal(social.readUInt32BE(20), 630);
 });
+
+test('the singular domain permanently redirects to the plural domain', async () => {
+  const config = await readFile(path.join(root, 'netlify.toml'), 'utf8');
+  assert.match(config, /from = "https:\/\/ittybittytruck\.com\/\*"/);
+  assert.match(config, /to = "https:\/\/ittybittytrucks\.com\/:splat"/);
+  assert.match(config, /status = 301/);
+});
