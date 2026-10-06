@@ -5,3 +5,6 @@ node_modules/
 .wrangler/
 dist/
 .sites-runtime/
+
+# Local Netlify folder
+.netlify

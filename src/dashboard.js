@@ -1,3 +1,5 @@
+import { AuthError, getUser, handleAuthCallback, login, logout, signup } from '@netlify/identity';
+
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const labels = { follow: 'Someone’s following along', truck: 'Someone wants a little truck', love: 'A little love came in', photo: 'Spotted in the wild', visit: 'Someone stopped by' };
@@ -29,8 +31,20 @@ function lock(status) {
   $('#feed').replaceChildren(); $('#traffic-chart').replaceChildren();
   $('.stats').hidden = true; $('.traffic').hidden = true; $('.activity').hidden = true; $('.delivery-note').hidden = true;
   $('#auth-message').hidden = false;
-  if (status === 403) $('#auth-message p').textContent = 'This account doesn’t have access. Sign in with Bruce’s owner account.';
+  $('#signout').hidden = status !== 403;
+  if (status === 403) {
+    $('#auth-message>p').textContent = 'This account doesn’t have access. Sign in with Bruce’s owner account.';
+    $('#auth-error').textContent = 'This sign-in is not the owner account.';
+  }
   setConnection('Sign-in required');
+}
+function unlock() {
+  stopped = false;
+  $('#auth-message').hidden = true;
+  $('#signout').hidden = false;
+  $('.stats').hidden = false; $('.traffic').hidden = false; $('.activity').hidden = false; $('.delivery-note').hidden = false;
+  $('#auth-error').textContent = '';
+  refresh();
 }
 function renderChart(rows) {
   const totals = new Map(rows.map((row) => [new Date(row.hour).getTime(), row.count]));
@@ -115,4 +129,39 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) { controller?.abort(); setConnection('Paused while this tab is hidden'); }
   else refresh();
 });
-refresh();
+
+async function submitAuth(mode) {
+  const form = $('#auth-form');
+  if (!form.reportValidity()) return;
+  const email = $('#owner-email').value.trim();
+  const password = $('#owner-password').value;
+  const buttons = $$('#auth-form button');
+  buttons.forEach((button) => { button.disabled = true; });
+  $('#auth-error').textContent = mode === 'signup' ? 'Creating your sign-in…' : 'Signing you in…';
+  try {
+    const user = mode === 'signup' ? await signup(email, password, { full_name: 'Bruce' }) : await login(email, password);
+    if (mode === 'signup' && !user.confirmedAt) {
+      $('#auth-error').textContent = 'Check your email to confirm this sign-in, then come back here.';
+      return;
+    }
+    unlock();
+  } catch (error) {
+    $('#auth-error').textContent = error instanceof AuthError ? error.message : 'That sign-in didn’t work. Try again.';
+  } finally {
+    buttons.forEach((button) => { button.disabled = false; });
+  }
+}
+
+$('#auth-form').addEventListener('submit', (event) => { event.preventDefault(); submitAuth('login'); });
+$('#signup-button').addEventListener('click', () => submitAuth('signup'));
+$('#signout').addEventListener('click', async () => {
+  await logout();
+  lock(401);
+});
+
+async function setupIdentity() {
+  try { await handleAuthCallback(); } catch (error) { $('#auth-error').textContent = error instanceof AuthError ? error.message : 'That confirmation link didn’t work.'; }
+  const user = await getUser();
+  if (user) unlock(); else lock(401);
+}
+setupIdentity();

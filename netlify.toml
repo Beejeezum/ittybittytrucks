@@ -1,0 +1,72 @@
+[build]
+  command = "npm run build:netlify"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22.13.0"
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard/"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/hi/teal"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/hi/teal/"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/trucks"
+  to = "/#about"
+  status = 301
+
+[[redirects]]
+  from = "/trucks/teal-sambar"
+  to = "/#about"
+  status = 301
+
+[[redirects]]
+  from = "/tiny-truck-101"
+  to = "/#about"
+  status = 301
+
+[[redirects]]
+  from = "/our-story"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/find-me-one"
+  to = "/#truck"
+  status = 301
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' blob: data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+
+[[headers]]
+  for = "/dashboard*"
+  [headers.values]
+    Cache-Control = "private, no-store"
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"

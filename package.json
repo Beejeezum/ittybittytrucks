@@ -6,14 +6,22 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:netlify": "node scripts/build-netlify.mjs",
     "dev": "node scripts/build.mjs && node scripts/serve.mjs",
     "preview": "node scripts/serve.mjs",
     "db:generate": "drizzle-kit generate",
-    "test": "node --test tests/worker.test.mjs"
+    "test": "node scripts/build.mjs && node --test tests/worker.test.mjs tests/netlify-build.test.mjs"
   },
   "engines": { "node": ">=22.13.0" },
+  "dependencies": {
+    "@netlify/blobs": "^10.0.0",
+    "@netlify/database": "^2.0.1",
+    "@netlify/identity": "^2.0.0"
+  },
   "devDependencies": {
+    "@netlify/functions": "^6.0.2",
     "drizzle-orm": "0.45.2",
-    "drizzle-kit": "0.31.10"
+    "drizzle-kit": "0.31.10",
+    "esbuild": "^0.28.2"
   }
 }

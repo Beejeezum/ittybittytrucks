@@ -6,10 +6,10 @@
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/dashboard.css"><script src="/dashboard.js" defer></script>
+  <link rel="stylesheet" href="/dashboard.css"><script type="module" src="/dashboard.js"></script>
 </head>
 <body>
-  <header class="dash-header"><a class="wordmark" href="/">ittybitty<span>trucks.</span></a><nav aria-label="Dashboard links"><a href="/" target="_blank" rel="noopener">Open site</a><a href="/signout-with-chatgpt?return_to=%2F" target="_top">Sign out</a></nav></header>
+  <header class="dash-header"><a class="wordmark" href="/">ittybitty<span>trucks.</span></a><nav aria-label="Dashboard links"><a href="/" target="_blank" rel="noopener">Open site</a><button type="button" id="signout" hidden>Sign out</button></nav></header>
   <main>
     <div class="dash-title"><div><p class="eyebrow">Just for you, Bruce</p><h1>Look who stopped by.</h1></div><div class="connection" id="connection" role="status"><span class="status-dot" aria-hidden="true"></span><span id="connection-label">Connecting…</span></div></div>
     <section class="stats" aria-label="Site activity">
@@ -30,7 +30,19 @@
     </section>
     <aside class="delivery-note"><span aria-hidden="true">✉</span><div><strong>Everything lands here.</strong><p>Gmail notifications aren’t connected yet. You can reply to truck inquiries or export your email list here.</p></div></aside>
     <p class="measurement-note">“Here now” is an approximate count of active browsers. Visits are page openings, not unique people. Visit tracking starts with this dashboard’s launch; earlier visits aren’t included.</p>
-    <div id="auth-message" class="auth-message" hidden><h2>Let’s get you signed in.</h2><p>Your dashboard stays private to your owner account.</p><a href="/signin-with-chatgpt?return_to=%2Fdashboard" target="_top">Sign in with ChatGPT</a></div>
+    <div id="auth-message" class="auth-message" hidden>
+      <h2>Let’s get you signed in.</h2>
+      <p>Your dashboard stays private to your owner account.</p>
+      <form id="auth-form">
+        <label for="owner-email">Email</label>
+        <input id="owner-email" name="email" type="email" autocomplete="username" required>
+        <label for="owner-password">Password</label>
+        <input id="owner-password" name="password" type="password" autocomplete="current-password" minlength="8" required>
+        <div class="auth-actions"><button type="submit" id="login-button">Sign in</button><button type="button" id="signup-button">Create owner sign-in</button></div>
+        <p id="auth-error" class="auth-error" role="alert"></p>
+        <p class="auth-help">First visit? Create the owner sign-in, then use the confirmation email Netlify sends you.</p>
+      </form>
+    </div>
   </main>
 </body>
 </html>
