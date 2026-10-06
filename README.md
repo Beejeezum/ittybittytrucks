@@ -1,63 +1,58 @@
 # Itty Bitty Trucks
 
-A little home for Japanese kei trucks, roadside discoveries, and the people who want one.
+One small mobile landing page for someone who spots Bruce’s truck around Boca Raton.
 
-**Primary domain:** ittybittytrucks.com  
-**Companion domain:** ittybittytruck.com  
-**Status:** Public first version, with expanded owner and truck stories. Custom domains and business email still need activation. The GitHub copy is pending connection access to Beejeezum.
+## Experience
 
-## Run it
+The page starts with the truck and a short hello, then offers one email field to follow Bruce’s trucks and local projects. A love reaction, truck information, a one-field truck inquiry, and a private photo upload are secondary actions. Bruce’s name links to https://brucepinchbeck.com.
 
-Use Node.js 20 or later. There are no package dependencies to install.
+- Canonical domain: https://ittybittytrucks.com
+- Companion domain: https://ittybittytruck.com — permanent redirect to the plural domain
+- Old QR route `/hi/teal/` still works. Old content URLs redirect to the relevant landing-page sheet.
+- Both apex custom domains have active hosting validation and TLS. `www` hostnames are not configured.
+
+## Run and verify
+
+Use Node.js 24 or newer for the local SQLite preview.
 
 ```sh
+npm ci
+npm run build
+npm test
 npm run dev
 ```
 
-Open `http://localhost:4173`. To rebuild after changing a source file, run `npm run build` and refresh. To serve an existing build, run `npm run preview`.
+The local preview uses its own SQLite database and image directory under `.sites-runtime/local/`, never the production database. After changing source, rebuild and restart the preview server. In the managed Sites environment, `sites-preview` owns starting and stopping the server.
 
-```sh
-npm run build
-```
+## Source map
 
-The static site is written to `dist/`. The build creates individual HTML pages and a permanent QR entry route. The output can be hosted by a static host, including Cloudflare Pages, without a framework runtime.
+- `src/landing.html` — copy, forms, and native dialog sheets.
+- `src/landing.css` — phone-first layout, visible focus, and reduced-motion support.
+- `src/landing.js` — form validation, confirmed save states, reactions, and photo preparation.
+- `worker/index.js` — request validation, persistence, duplicate protection, rate limits, and redirects.
+- `db/schema.ts`, `drizzle/` — database schema and generated migrations.
+- `scripts/build.mjs` — packages the landing assets and Worker into `dist/server/`.
+- `tests/worker.test.mjs` — persistence, validation, failure, privacy, and redirect tests.
 
-## The first little world
+## Where submissions go
 
-| Route | Purpose |
+Production runs on Sites with its managed Cloudflare D1 and R2 storage. Open this Site’s **Settings → database viewer** to inspect its private records, or ask ChatGPT to retrieve them using the connected Sites tools.
+
+| Table | Purpose |
 | --- | --- |
-| `/` | A playful welcome for someone who spotted a truck |
-| `/trucks/` | Meet the trucks and see an honest inventory empty state |
-| `/trucks/teal-sambar/` | Bruce’s 2000 Subaru Sambar TT2 profile |
-| `/hi/teal/` | Permanent printed-QR route to the Sambar profile |
-| `/tiny-truck-101/` | A sourced introduction and buying questions |
-| `/our-story/` | Bruce’s route into ownership and the business he is building |
-| `/find-me-one/` | A truck wish-list builder |
+| `truck_requests` | Email followers (`intent=follow`) and truck inquiries (`intent=truck`). Includes contact method, contact value, timestamp, and consent purpose. |
+| `visitor_signals` | Anonymous love reactions, one per first-party visitor cookie. |
+| `truck_sightings` | Private photo metadata. Image bytes live in R2. |
+| `submission_limits` | Short-lived hashed request counters for abuse control; no plain IP addresses. |
 
-The wish-list builder currently creates a draft in the visitor’s browser. It can copy the draft, preserve the visitor’s Sambar reference, and return to editing. It does not store or submit personal information, and it does not pretend to have sent an inquiry.
+Photo links can be constructed from a row as `/sighting/{id}/{view_key}`. Treat the random `view_key` like a private sharing secret. No public photo list or contact listing is exposed. Browser uploads are resized to at most 1600 pixels and re-encoded as JPEG to remove EXIF/location metadata before upload.
 
-After the business mailbox is verified, set `emailReady` to `true` in `site.config.json` and rebuild. The review screen will then offer an explicit **Email my wish list** action that opens the visitor’s email app. The visitor must send the email. This is not a background form-delivery service.
+**Email delivery is not configured.** The desired notification destination is `beejeezum@gmail.com`. The forms save directly to the database; they do not send a welcome email, text, or Gmail notification. Truck inquiries do not enroll someone in community emails. A sending provider or Cloudflare email credential is needed before adding background notifications and newsletter delivery.
 
-## Content and launch notes
+## Publishing
 
-- [Brand and site plan](docs/brand-and-site-plan.md)
-- [Domain email setup](docs/email-setup.md)
-- [Launch and content handoff](docs/launch.md)
-- [Connect the two domains](docs/domain-setup.md)
-- [Story sources and editorial decisions](docs/story-sources.md)
+This checkout is synced with the existing Sites source repository. Use the Sites workflow to commit and push the exact source, build/package it, save a version, and deploy publicly. Generated `dist/` files and local preview data are excluded from source control. Hosting provisions the `DB` and `BUCKET` bindings and applies generated migrations before uploading the Worker. Never run schema DDL in request handlers.
 
-The visual direction uses large expressive typography, yellow, dark ink, turquoise, and a restrained red accent. The truck art is a clearly illustrated concept asset, not a photograph or exact representation of inventory. Replace the profile illustration with Bruce’s real photographs before treating that page as a finished vehicle presentation.
+The separate public `Beejeezum/ittybittytrucks` GitHub repository is currently empty. Its connected GitHub app still lacks an installation for Beejeezum, so copying the source there remains blocked by integration access.
 
-The Sambar is described as Bruce’s truck, without an invented sale status or price. No additional vehicles, testimonials, sold counts, or business services are assumed. Road-use copy avoids blanket legality claims.
-
-## Editing
-
-- `src/pages/`: individual page content.
-- `src/template.html`: shared navigation, document metadata, and footer.
-- `src/styles.css`: responsive visual system.
-- `src/site.js`: menu, wish-list draft, and copy/email interactions.
-- `site.config.json`: canonical domain, contact address, email readiness, and indexing state.
-- `assets/`: project images and the initial typographic favicon.
-- `scripts/`: dependency-free build and local preview.
-
-`indexable` is deliberately `false` for the initial review draft. Change it only when the actual content, images, contact flow, and domain are ready for public launch. No analytics or third-party form service is included.
+The truck image is labeled as an illustration. No vehicle sale status or price is implied. Search indexing remains disabled pending the final public launch/content decision.
