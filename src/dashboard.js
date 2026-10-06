@@ -1,11 +1,11 @@
-import { AuthError, getUser, handleAuthCallback, login, logout, signup } from '@netlify/identity';
+import { acceptInvite, AuthError, getUser, handleAuthCallback, login, logout } from '@netlify/identity';
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const labels = { follow: 'Someone’s following along', truck: 'Someone wants a little truck', love: 'A little love came in', photo: 'Spotted in the wild', visit: 'Someone stopped by' };
 const icons = { follow: '＋', truck: '↔', love: '♥', photo: '▧', visit: '·' };
 const empty = { all: 'Your first hello will show up here.', follow: 'No signups yet. Your next follower will appear here.', truck: 'No truck inquiries yet.', love: 'No love yet. Give it a little time.', photo: 'No sightings yet. Photos will appear here privately.', visit: 'No visits recorded yet. Tracking starts with this launch.' };
-let kind = 'all', timer, controller, signature = '', latestId, stopped = false;
+let kind = 'all', timer, controller, signature = '', latestId, stopped = false, inviteToken = '';
 const number = new Intl.NumberFormat();
 const clock = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
 function element(tag, className, text) {
@@ -130,20 +130,18 @@ document.addEventListener('visibilitychange', () => {
   else refresh();
 });
 
-async function submitAuth(mode) {
+async function submitAuth() {
   const form = $('#auth-form');
   if (!form.reportValidity()) return;
   const email = $('#owner-email').value.trim();
   const password = $('#owner-password').value;
   const buttons = $$('#auth-form button');
   buttons.forEach((button) => { button.disabled = true; });
-  $('#auth-error').textContent = mode === 'signup' ? 'Creating your sign-in…' : 'Signing you in…';
+  $('#auth-error').textContent = inviteToken ? 'Activating your private sign-in…' : 'Signing you in…';
   try {
-    const user = mode === 'signup' ? await signup(email, password, { full_name: 'Bruce' }) : await login(email, password);
-    if (mode === 'signup' && !user.confirmedAt) {
-      $('#auth-error').textContent = 'Check your email to confirm this sign-in, then come back here.';
-      return;
-    }
+    if (inviteToken) await acceptInvite(inviteToken, password);
+    else await login(email, password);
+    inviteToken = '';
     unlock();
   } catch (error) {
     $('#auth-error').textContent = error instanceof AuthError ? error.message : 'That sign-in didn’t work. Try again.';
@@ -152,15 +150,29 @@ async function submitAuth(mode) {
   }
 }
 
-$('#auth-form').addEventListener('submit', (event) => { event.preventDefault(); submitAuth('login'); });
-$('#signup-button').addEventListener('click', () => submitAuth('signup'));
+$('#auth-form').addEventListener('submit', (event) => { event.preventDefault(); submitAuth(); });
 $('#signout').addEventListener('click', async () => {
   await logout();
   lock(401);
 });
 
 async function setupIdentity() {
-  try { await handleAuthCallback(); } catch (error) { $('#auth-error').textContent = error instanceof AuthError ? error.message : 'That confirmation link didn’t work.'; }
+  try {
+    const callback = await handleAuthCallback();
+    if (callback?.type === 'invite' && callback.token) {
+      inviteToken = callback.token;
+      lock(401);
+      $('#auth-message h2').textContent = 'Choose your owner password.';
+      $('#auth-message>p').textContent = 'This invitation is private to your owner account.';
+      $('label[for="owner-email"]').hidden = true;
+      $('#owner-email').hidden = true;
+      $('#owner-email').required = false;
+      $('#owner-password').autocomplete = 'new-password';
+      $('#login-button').textContent = 'Activate owner sign-in';
+      $('.auth-help').textContent = 'Use at least 8 characters. You’ll be signed in when the account is ready.';
+      return;
+    }
+  } catch (error) { $('#auth-error').textContent = error instanceof AuthError ? error.message : 'That invitation link didn’t work.'; }
   const user = await getUser();
   if (user) unlock(); else lock(401);
 }

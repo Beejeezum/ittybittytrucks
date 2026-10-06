@@ -1,5 +1,6 @@
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
+if (/^#invite_token=/.test(location.hash)) location.replace(`/dashboard${location.hash}`);
 function requestID() {
   if (crypto.randomUUID) return crypto.randomUUID();
   const bytes = crypto.getRandomValues(new Uint8Array(16));
