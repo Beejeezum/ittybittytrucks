@@ -25,6 +25,7 @@ export async function createLocalEnv(directory) {
     };
   }
   const env = {
+    OWNER_EMAIL: 'preview-owner@example.invalid',
     DB: {
       prepare: statement,
       async batch(queries) {

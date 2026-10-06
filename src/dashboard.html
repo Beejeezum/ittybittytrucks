@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Your dashboard · Itty Bitty Trucks</title><meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboard.css"><script src="/dashboard.js" defer></script>
+</head>
+<body>
+  <header class="dash-header"><a class="wordmark" href="/">ittybitty<span>trucks.</span></a><nav aria-label="Dashboard links"><a href="/" target="_blank" rel="noopener">Open site</a><a href="/signout-with-chatgpt?return_to=%2F" target="_top">Sign out</a></nav></header>
+  <main>
+    <div class="dash-title"><div><p class="eyebrow">Just for you, Bruce</p><h1>Look who stopped by.</h1></div><div class="connection" id="connection" role="status"><span class="status-dot" aria-hidden="true"></span><span id="connection-label">Connecting…</span></div></div>
+    <section class="stats" aria-label="Site activity">
+      <div class="stat presence"><span class="stat-label">Here now</span><strong id="stat-active">—</strong><span class="stat-note">Browsers seen in the last 90 seconds</span></div>
+      <div class="stat"><span class="stat-label">Visits</span><strong id="stat-visits">—</strong><span class="stat-note">Past 24 hours</span></div>
+      <div class="stat"><span class="stat-label">Love sent <span aria-hidden="true">♡</span></span><strong id="stat-love">—</strong><span class="stat-note">All time</span></div>
+      <div class="stat"><span class="stat-label">Following along</span><strong id="stat-followers">—</strong><span class="stat-note">Email signups</span></div>
+      <div class="stat"><span class="stat-label">Want a truck</span><strong id="stat-requests">—</strong><span class="stat-note">Truck inquiries</span></div>
+      <div class="stat"><span class="stat-label">Good spots</span><strong id="stat-photos">—</strong><span class="stat-note">Photos received</span></div>
+    </section>
+    <section class="traffic panel" aria-labelledby="traffic-title"><div class="panel-heading"><h2 id="traffic-title">A little traffic</h2><span>Visits over the past 24 hours</span></div><div id="traffic-chart" class="traffic-chart" role="img" aria-label="Loading visits by hour"></div><div class="chart-labels"><span id="chart-start">24 hours ago</span><span>Now</span></div></section>
+    <section class="activity panel" aria-labelledby="activity-title">
+      <div class="panel-heading activity-heading"><div><h2 id="activity-title">Coming through</h2><p id="updated-at">Your latest signups, hellos, and sightings.</p></div><div class="exports"><a href="/api/dashboard/export?intent=follow" download>Export followers</a><a href="/api/dashboard/export?intent=truck" download>Export inquiries</a></div></div>
+      <div class="feed-filters" role="group" aria-label="Filter activity"><button type="button" data-kind="all" aria-pressed="true">Everything</button><button type="button" data-kind="follow" aria-pressed="false">Following</button><button type="button" data-kind="truck" aria-pressed="false">Truck requests</button><button type="button" data-kind="love" aria-pressed="false">Love</button><button type="button" data-kind="photo" aria-pressed="false">Photos</button><button type="button" data-kind="visit" aria-pressed="false">Visits</button></div>
+      <p id="feed-announcement" class="visually-hidden" role="status" aria-live="polite"></p>
+      <div id="feed" class="feed"><p class="empty-state">Loading your activity…</p></div>
+      <p class="feed-limit">Latest 100 matching events. Private to your account.</p>
+    </section>
+    <aside class="delivery-note"><span aria-hidden="true">✉</span><div><strong>Everything lands here.</strong><p>Gmail notifications aren’t connected yet. You can reply to truck inquiries or export your email list here.</p></div></aside>
+    <p class="measurement-note">“Here now” is an approximate count of active browsers. Visits are page openings, not unique people. Visit tracking starts with this dashboard’s launch; earlier visits aren’t included.</p>
+    <div id="auth-message" class="auth-message" hidden><h2>Let’s get you signed in.</h2><p>Your dashboard stays private to your owner account.</p><a href="/signin-with-chatgpt?return_to=%2Fdashboard" target="_top">Sign in with ChatGPT</a></div>
+  </main>
+</body>
+</html>

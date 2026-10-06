@@ -24,3 +24,16 @@ The requested Gmail forwarding address is `beejeezum@gmail.com`; automatic forwa
 Use the existing Sites source repository and project. GitHub source mirroring remains blocked: the connected GitHub app reports a wherebyus installation but no Beejeezum installation. Do not report the GitHub repository as updated until a write there succeeds.
 
 `www` domains, domain inboxes, automatic Gmail notifications, and newsletter sending are not configured. The image remains explicitly labeled illustration, and indexing remains disabled. No purchase or paid email subscription has been initiated.
+
+
+## Owner dashboard update — October 6, 2026 UTC
+
+The public introduction now names The New Tropic, New World Symphony, and The Museum of Self, grounded in Bruce’s current public site (https://brucepinchbeck.com/) and recovered project context. The import invitation follows the user’s current statement that more trucks are being brought over from Japan. No ready-for-sale inventory or delivery dates are invented.
+
+The truck image was edited through image generation to remove its yellow background. The production asset preserves real alpha transparency and is optimized as WebP. The phone layout was inspected with the asset composited on the actual page.
+
+The private `/dashboard` adds a five-second activity feed and owner-only photo viewer, reply links, CSV exports, cumulative interaction totals, 24-hour visit history, and approximate active browsers. Dashboard access is restricted to the owner email verified in the Site access policy through dispatch-owned ChatGPT sign-in. Public visitors and other authenticated accounts are denied all dashboard data. Old `/sighting/` capability links are disabled.
+
+The 0001 migration creates only the new visit table and indexes; previously applied migrations are unchanged. Tests cover owner/anonymous/nonowner/missing-config boundaries, photos and exports, duplicate heartbeats, 90-second presence expiry, and safe export content. Browser preview confirms filtering and existing locally submitted records.
+
+Gmail delivery is still unconfigured. The dashboard provides immediate practical access to submissions without requiring database tools.

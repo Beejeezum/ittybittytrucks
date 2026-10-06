@@ -11,6 +11,12 @@ http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(`<!doctype html><title>Mobile QA</title><style>body{margin:0;display:grid;place-items:start center;background:#dce1da}iframe{width:${width}px;height:844px;border:0;background:#faf8f1}</style><iframe src="/" title="Mobile landing page"></iframe>`); return;
     }
+    // Local preview uses synthetic identity and only local SQLite data. This adapter is never deployed.
+    const previewPath = new URL(req.url, 'http://localhost').pathname;
+    if (previewPath === '/dashboard' || previewPath.startsWith('/api/dashboard')) {
+      req.headers['oai-authenticated-user-id'] = 'local-preview-owner';
+      req.headers['oai-authenticated-user-email'] = env.OWNER_EMAIL;
+    }
     const request = new Request(`http://${req.headers.host}${req.url}`, { method: req.method, headers: req.headers, ...(req.method === 'GET' || req.method === 'HEAD' ? {} : { body: req, duplex: 'half' }) });
     const response = await worker.fetch(request, env);
     res.writeHead(response.status, Object.fromEntries(response.headers));

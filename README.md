@@ -34,6 +34,16 @@ The local preview uses its own SQLite database and image directory under `.sites
 - `scripts/build.mjs` — packages the landing assets and Worker into `dist/server/`.
 - `tests/worker.test.mjs` — persistence, validation, failure, privacy, and redirect tests.
 
+## Your private dashboard
+
+Open **https://ittybittytrucks.com/dashboard** and sign in with the same ChatGPT owner account used for this Site. The server requires a platform-authenticated identity plus an exact match to the owner email from the Site’s access policy, stored as `OWNER_EMAIL` in private runtime configuration. Signing in as another user does not grant access.
+
+The dashboard refreshes every five seconds while visible. It includes a filterable activity feed, private sighting photos, email followers, truck inquiries with reply links, CSV exports, love totals, a 24-hour visit chart, and approximate active-browser counts. “Here now” means browsers reporting activity within 90 seconds. Visits are page openings and begin with this release. Dates in the chart use Eastern Time.
+
+All dashboard APIs, image access, and exports enforce owner authorization. Old bearer-style photo URLs are disabled. Private responses use no-store caching. Public forms and browsing remain anonymous.
+
+The local preview simulates an owner identity using local-only data; that Node preview adapter is never packaged into the deployed Worker. Production trusts only the Sites dispatcher’s authenticated headers and checks the owner allowlist on the server.
+
 ## Where submissions go
 
 Production runs on Sites with its managed Cloudflare D1 and R2 storage. Open this Site’s **Settings → database viewer** to inspect its private records, or ask ChatGPT to retrieve them using the connected Sites tools.
@@ -43,9 +53,10 @@ Production runs on Sites with its managed Cloudflare D1 and R2 storage. Open thi
 | `truck_requests` | Email followers (`intent=follow`) and truck inquiries (`intent=truck`). Includes contact method, contact value, timestamp, and consent purpose. |
 | `visitor_signals` | Anonymous love reactions, one per first-party visitor cookie. |
 | `truck_sightings` | Private photo metadata. Image bytes live in R2. |
+| `site_visits` | Anonymous page sessions, device category, referring hostname, and last visible heartbeat. |
 | `submission_limits` | Short-lived hashed request counters for abuse control; no plain IP addresses. |
 
-Photo links can be constructed from a row as `/sighting/{id}/{view_key}`. Treat the random `view_key` like a private sharing secret. No public photo list or contact listing is exposed. Browser uploads are resized to at most 1600 pixels and re-encoded as JPEG to remove EXIF/location metadata before upload.
+Open photos from the private dashboard. `/api/dashboard/photos/{id}` requires the owner identity; there are no public photo or contact listings. Browser uploads are resized to at most 1600 pixels and re-encoded as JPEG to remove EXIF/location metadata before upload.
 
 **Email delivery is not configured.** The desired notification destination is `beejeezum@gmail.com`. The forms save directly to the database; they do not send a welcome email, text, or Gmail notification. Truck inquiries do not enroll someone in community emails. A sending provider or Cloudflare email credential is needed before adding background notifications and newsletter delivery.
 
@@ -55,4 +66,4 @@ This checkout is synced with the existing Sites source repository. Use the Sites
 
 The separate public `Beejeezum/ittybittytrucks` GitHub repository is currently empty. Its connected GitHub app still lacks an installation for Beejeezum, so copying the source there remains blocked by integration access.
 
-The truck image is labeled as an illustration. No vehicle sale status or price is implied. Search indexing remains disabled pending the final public launch/content decision.
+The truck artwork now uses an actual transparent background, so the yellow image rectangle is gone. It is labeled as an illustration. No vehicle sale status or price is implied. Search indexing remains disabled pending the final public launch/content decision.

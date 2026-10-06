@@ -35,3 +35,12 @@ export const limits = sqliteTable('submission_limits', {
   bucket: integer('bucket').notNull(),
   count: integer('count').notNull(),
 }, (table) => [index('idx_submission_limits_bucket').on(table.bucket)]);
+
+export const visits = sqliteTable('site_visits', {
+  id: text('id').primaryKey(),
+  visitorKey: text('visitor_key').notNull(),
+  startedAt: text('started_at').notNull(),
+  lastSeenAt: text('last_seen_at').notNull(),
+  referrerHost: text('referrer_host').notNull().default(''),
+  device: text('device').notNull().default('unknown'),
+}, (table) => [index('idx_site_visits_started_at').on(table.startedAt), index('idx_site_visits_last_seen_at').on(table.lastSeenAt)]);

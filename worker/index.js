@@ -1,4 +1,5 @@
 import { assets } from './site-assets.js';
+import { ownerAccess, privateHeaders, dashboardData, ownerPhoto, exportContacts } from './dashboard.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_PHOTO = 2 * 1024 * 1024;
@@ -99,18 +100,37 @@ async function photo(request, env, key) {
   } catch (error) { await store.delete(objectKey).catch(() => {}); throw error; }
   return json({ ok: true });
 }
-async function privatePhoto(url, env) {
-  const parts = url.pathname.split('/');
-  if (parts.length !== 4 || !UUID.test(parts[2])) return new Response('Not found', { status: 404 });
-  const row = await database(env).prepare('SELECT object_key FROM truck_sightings WHERE id = ? AND view_key = ?').bind(parts[2], parts[3]).first();
-  if (!row) return new Response('Not found', { status: 404 });
-  const object = await bucket(env).get(row.object_key);
-  if (!object) return new Response('Not found', { status: 404 });
-  return new Response(object.body, { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex, nofollow' } });
+async function recordVisit(request, env, key) {
+  const { sessionId, referrer, device } = await readJson(request);
+  if (!UUID.test(sessionId || '') || !['mobile', 'desktop', 'tablet'].includes(device)) throw new HttpError(400, 'Invalid visit.');
+  let host = '';
+  if (typeof referrer === 'string' && referrer.length < 2048) {
+    try { const source = new URL(referrer); if (['http:', 'https:'].includes(source.protocol) && source.hostname !== new URL(request.url).hostname) host = source.hostname.slice(0, 200); } catch {}
+  }
+  await rateLimit(request, env, key, 'visit', 2400);
+  const now = new Date().toISOString();
+  await database(env).prepare('INSERT INTO site_visits (id, visitor_key, started_at, last_seen_at, referrer_host, device) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET last_seen_at = excluded.last_seen_at WHERE site_visits.visitor_key = excluded.visitor_key').bind(sessionId, key, now, now, host, device).run();
+  return json({ ok: true });
 }
 async function route(request, env) {
   const url = new URL(request.url);
   if (url.hostname === 'ittybittytruck.com') { url.hostname = 'ittybittytrucks.com'; url.protocol = 'https:'; return Response.redirect(url.toString(), ['GET', 'HEAD'].includes(request.method) ? 301 : 308); }
+  const dashboardPage = url.pathname === '/dashboard' || url.pathname === '/dashboard/';
+  const dashboardAPI = url.pathname === '/api/dashboard' || url.pathname.startsWith('/api/dashboard/');
+  if (dashboardPage || dashboardAPI) {
+    const access = ownerAccess(request, env);
+    if (access !== 200) {
+      if (dashboardPage && access === 401) return new Response(null, { status: 302, headers: { Location: '/signin-with-chatgpt?return_to=%2Fdashboard', ...privateHeaders } });
+      return json({ error: access === 401 ? 'Sign in to see your dashboard.' : 'This dashboard is private to Bruce.' }, access, privateHeaders);
+    }
+    if (!['GET', 'HEAD'].includes(request.method)) return json({ error: 'Method not allowed.' }, 405, privateHeaders);
+    if (dashboardPage) return new Response(request.method === 'HEAD' ? null : assets['/dashboard'].body, { headers: { 'Content-Type': 'text/html; charset=utf-8', ...privateHeaders } });
+    if (url.pathname === '/api/dashboard') return dashboardData(request, env);
+    if (url.pathname === '/api/dashboard/export') return exportContacts(request, env);
+    const photoId = url.pathname.match(/^\/api\/dashboard\/photos\/([0-9a-f-]+)$/)?.[1];
+    if (photoId && UUID.test(photoId)) return ownerPhoto(photoId, env);
+    return json({ error: 'Not found.' }, 404, privateHeaders);
+  }
   if (url.pathname.startsWith('/api/')) {
     if (url.pathname === '/api/hello' && request.method === 'GET') return hello(request, env);
     if (request.method !== 'POST') return json({ error: 'Not found' }, 404);
@@ -120,10 +140,11 @@ async function route(request, env) {
     if (url.pathname === '/api/signal') return signal(request, env, key);
     if (url.pathname === '/api/contact') return contact(request, env, key);
     if (url.pathname === '/api/photo') return photo(request, env, key);
+    if (url.pathname === '/api/visit') return recordVisit(request, env, key);
     return json({ error: 'Not found' }, 404);
   }
   if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
-  if (url.pathname.startsWith('/sighting/')) return privatePhoto(url, env);
+  if (url.pathname.startsWith('/sighting/')) return new Response('Not found', { status: 404 });
   const old = LEGACY.get(url.pathname.replace(/\/$/, ''));
   if (old) return Response.redirect(new URL(old, url.origin).toString(), 301);
   const asset = assets[url.pathname];

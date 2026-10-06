@@ -23,7 +23,7 @@ async function post(path, payload) {
 }
 function loveSaved() {
   $('#love-button').setAttribute('aria-pressed', 'true');
-  $('#love-label').textContent = 'Love received';
+  $('#love-label').textContent = 'Right back at you';
   $('#love-button .heart').textContent = '♥';
 }
 hello().then((state) => { if (state.loved) loveSaved(); }).catch(() => {});
@@ -146,3 +146,13 @@ $('#photo-form').addEventListener('submit', async (event) => {
 });
 if (location.hash === '#truck') openSheet('truck-sheet', $('[data-open="truck-sheet"]'));
 if (location.hash === '#about') openSheet('info-sheet', $('[data-open="info-sheet"]'));
+
+// Presence is independent of forms and runs only while this page is visible.
+const visitSessionId = requestID();
+async function trackVisit() {
+  if (document.hidden) return;
+  try { await post('/api/visit', { sessionId: visitSessionId, referrer: document.referrer, device: innerWidth <= 600 ? 'mobile' : innerWidth <= 1024 ? 'tablet' : 'desktop' }); } catch {}
+}
+trackVisit();
+setInterval(trackVisit, 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) trackVisit(); });
