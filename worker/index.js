@@ -148,7 +148,7 @@ async function route(request, env) {
   const old = LEGACY.get(url.pathname.replace(/\/$/, ''));
   if (old) return Response.redirect(new URL(old, url.origin).toString(), 301);
   const asset = assets[url.pathname];
-  if (!asset) return new Response('A little lost? Head back to ittybittytrucks.com.', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+  if (!asset) return new Response(request.method === 'HEAD' ? null : assets['/404.html'].body, { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
   const body = asset.base64 ? Uint8Array.from(atob(asset.body), (character) => character.charCodeAt(0)) : asset.body;
   return new Response(request.method === 'HEAD' ? null : body, { headers: { 'Content-Type': asset.type, 'Cache-Control': url.pathname.startsWith('/assets/') ? 'public, max-age=86400' : 'no-cache' } });
 }

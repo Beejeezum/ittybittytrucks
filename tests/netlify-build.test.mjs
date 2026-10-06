@@ -25,6 +25,8 @@ test('brand, social sharing, and install metadata use the approved assets', asyn
   assert.match(html, /src="\/assets\/itty-bitty-trucks-logo\.png"/);
   assert.match(html, /property="og:image" content="https:\/\/ittybittytrucks\.netlify\.app\/assets\/social-share\.png"/);
   assert.match(html, /name="twitter:card" content="summary_large_image"/);
+  assert.match(html, /rel="icon" href="\/favicon\.ico" sizes="any"/);
+  assert.match(html, /rel="icon" href="\/assets\/favicon-16\.png" type="image\/png" sizes="16x16"/);
   assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png"/);
   assert.match(html, /rel="manifest" href="\/site\.webmanifest"/);
   const manifest = JSON.parse(await readFile(path.join(root, 'assets/site.webmanifest'), 'utf8'));
@@ -33,6 +35,15 @@ test('brand, social sharing, and install metadata use the approved assets', asyn
   const social = await readFile(path.join(root, 'assets/social-share.png'));
   assert.equal(social.readUInt32BE(16), 1200);
   assert.equal(social.readUInt32BE(20), 630);
+});
+
+test('browser titles are concise and descriptive on every HTML page', async () => {
+  const landing = await readFile(path.join(root, 'src/landing.html'), 'utf8');
+  const dashboard = await readFile(path.join(root, 'src/dashboard.html'), 'utf8');
+  const notFound = await readFile(path.join(root, 'src/404.html'), 'utf8');
+  assert.match(landing, /<title>Itty Bitty Trucks \| Kei Trucks in Boca Raton<\/title>/);
+  assert.match(dashboard, /<title>Owner Dashboard \| Itty Bitty Trucks<\/title>/);
+  assert.match(notFound, /<title>Page Not Found \| Itty Bitty Trucks<\/title>/);
 });
 
 test('the singular domain permanently redirects to the plural domain', async () => {
