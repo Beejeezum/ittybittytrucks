@@ -1,0 +1,14 @@
+{
+  "name": "Itty Bitty Trucks",
+  "short_name": "Itty Bitty",
+  "description": "Japanese kei trucks, local projects, and a Subaru Sambar in Boca Raton.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff1d5",
+  "theme_color": "#123b3d",
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

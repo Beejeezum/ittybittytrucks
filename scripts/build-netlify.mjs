@@ -16,9 +16,10 @@ await cp(path.join(root, 'src/landing.css'), path.join(out, 'styles.css'));
 await cp(path.join(root, 'src/landing.js'), path.join(out, 'site.js'));
 await cp(path.join(root, 'src/dashboard.html'), path.join(out, 'dashboard.html'));
 await cp(path.join(root, 'src/dashboard.css'), path.join(out, 'dashboard.css'));
-for (const name of ['favicon.svg', 'kei-illustration.webp', 'truck-cutout.webp']) {
+for (const name of ['favicon.svg', 'favicon-32.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'itty-bitty-trucks-logo.png', 'social-share.png', 'kei-illustration.webp', 'truck-cutout.webp']) {
   await cp(path.join(root, 'assets', name), path.join(out, 'assets', name));
 }
+await cp(path.join(root, 'assets/site.webmanifest'), path.join(out, 'site.webmanifest'));
 await build({
   entryPoints: [path.join(root, 'src/dashboard.js')],
   outfile: path.join(out, 'dashboard.js'),
