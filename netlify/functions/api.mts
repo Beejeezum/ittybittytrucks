@@ -5,6 +5,7 @@ import type { Config, Context } from '@netlify/functions';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_PHOTO = 2 * 1024 * 1024;
+const PHOTO_LICENSE_VERSION = 'ibt-photo-license-v1';
 const privateHeaders = {
   'Cache-Control': 'private, no-store',
   'X-Robots-Tag': 'noindex, nofollow',
@@ -145,6 +146,7 @@ function photoStore(context: Context) {
 async function photo(request: Request, context: Context, key: string) {
   const requestId = request.headers.get('X-Request-ID');
   if (!UUID.test(requestId || '')) throw new HttpError(400, 'Choose your photo again, then send it.');
+  if (request.headers.get('X-Photo-License') !== PHOTO_LICENSE_VERSION) throw new HttpError(400, 'Please confirm the photo permission before sending.');
   if (request.headers.get('Content-Type') !== 'image/jpeg') throw new HttpError(415, 'Choose a photo using the button on this page.');
   const bytes = await readBounded(request, MAX_PHOTO);
   if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) throw new HttpError(400, 'That photo didn’t load. Try another one.');
@@ -162,8 +164,8 @@ async function photo(request: Request, context: Context, key: string) {
   await store.set(objectKey, bytes.slice().buffer);
   try {
     await db.sql`
-      INSERT INTO truck_sightings (id, request_key, visitor_key, object_key, byte_size, created_at)
-      VALUES (${id}, ${requestId}, ${key}, ${objectKey}, ${bytes.length}, ${now})
+      INSERT INTO truck_sightings (id, request_key, visitor_key, object_key, byte_size, created_at, license_version, license_confirmed_at)
+      VALUES (${id}, ${requestId}, ${key}, ${objectKey}, ${bytes.length}, ${now}, ${PHOTO_LICENSE_VERSION}, ${now})
     `;
   } catch (error) {
     await store.delete(objectKey).catch(() => {});
@@ -223,7 +225,7 @@ async function dashboard(request: Request) {
     SELECT * FROM (
       SELECT id::text, intent AS kind, contact_type, contact_value, created_at, status, ''::text AS source FROM truck_requests
       UNION ALL SELECT 'love:' || visitor_key, 'love', '', '', created_at, '', '' FROM visitor_signals WHERE kind = 'love'
-      UNION ALL SELECT id::text, 'photo', '', '', created_at, '', '' FROM truck_sightings
+      UNION ALL SELECT id::text, 'photo', '', '', created_at, '', COALESCE(license_version, '') FROM truck_sightings
       UNION ALL SELECT 'visit:' || id::text, 'visit', device, '', started_at, '', referrer_host FROM site_visits
     ) AS feed
     WHERE (${kind} = 'all' OR kind = ${kind})

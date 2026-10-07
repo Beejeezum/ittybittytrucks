@@ -28,7 +28,7 @@ export async function dashboardData(request, env) {
     db.prepare(`SELECT * FROM (
       SELECT id, intent AS kind, contact_type, contact_value, created_at, status, '' AS source FROM truck_requests
       UNION ALL SELECT 'love:' || visitor_key, 'love', '', '', created_at, '', '' FROM visitor_signals WHERE kind = 'love'
-      UNION ALL SELECT id, 'photo', '', '', created_at, '', '' FROM truck_sightings
+      UNION ALL SELECT id, 'photo', '', '', created_at, '', COALESCE(license_version, '') FROM truck_sightings
       UNION ALL SELECT 'visit:' || id, 'visit', device, '', started_at, '', referrer_host FROM site_visits
     ) WHERE (? = 'all' OR kind = ?) ORDER BY created_at DESC LIMIT 100`).bind(kind, kind),
     db.prepare("SELECT strftime('%Y-%m-%dT%H:00:00Z', started_at) AS hour, COUNT(*) AS count FROM site_visits WHERE started_at >= ? GROUP BY hour ORDER BY hour").bind(day),

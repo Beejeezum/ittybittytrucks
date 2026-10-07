@@ -93,7 +93,12 @@ for (const intent of ['follow', 'truck']) {
   });
 }
 
+const photoLicense = $('#photo-license');
 let photoBlob, previewUrl, photoRequestId;
+photoLicense.addEventListener('change', () => {
+  $('#photo-send').disabled = !photoBlob || !photoLicense.checked;
+  if (photoLicense.checked) $('#photo-error').textContent = '';
+});
 $('#sighting-photo').addEventListener('change', async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -114,19 +119,21 @@ $('#sighting-photo').addEventListener('change', async (event) => {
     if (!photoBlob || photoBlob.size > 2 * 1024 * 1024) throw new Error('Try a smaller photo.');
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = URL.createObjectURL(photoBlob); $('#photo-preview').src = previewUrl; $('#photo-preview').hidden = false; $('#photo-prompt').hidden = true;
-    $('#photo-send').disabled = false; photoRequestId = requestID();
+    $('#photo-send').disabled = !photoLicense.checked; photoRequestId = requestID();
   } catch (error) { photoBlob = null; $('#photo-prompt').textContent = 'Choose a photo'; $('#photo-error').textContent = 'Couldn’t open that photo. Try a JPEG or PNG under 20 MB.'; }
 });
 $('#photo-form').addEventListener('submit', async (event) => {
-  event.preventDefault(); if (!photoBlob) return;
+  event.preventDefault();
+  if (!photoBlob) return;
+  if (!photoLicense.checked) { $('#photo-error').textContent = 'Please confirm the photo permission before sending.'; photoLicense.focus(); return; }
   const button = $('#photo-send'); button.disabled = true; $('#sighting-photo').disabled = true; button.textContent = 'Sending…'; $('#photo-error').textContent = '';
   try {
     await hello();
-    await api('/api/photo', { method: 'POST', headers: { 'Content-Type': 'image/jpeg', 'X-Request-ID': photoRequestId }, body: photoBlob });
+    await api('/api/photo', { method: 'POST', headers: { 'Content-Type': 'image/jpeg', 'X-Request-ID': photoRequestId, 'X-Photo-License': 'ibt-photo-license-v1' }, body: photoBlob });
     $('#photo-form-content').hidden = true; $('#photo-success').hidden = false; $('#photo-success').focus({ preventScroll: true });
-    photoBlob = null; URL.revokeObjectURL(previewUrl); $('#sighting-photo').value = '';
+    photoBlob = null; photoLicense.checked = false; URL.revokeObjectURL(previewUrl); $('#sighting-photo').value = '';
   } catch (error) { $('#photo-error').textContent = error.message; }
-  finally { button.disabled = !photoBlob; $('#sighting-photo').disabled = false; button.textContent = 'Send photo'; }
+  finally { button.disabled = !photoBlob || !photoLicense.checked; $('#sighting-photo').disabled = false; button.textContent = 'Send photo'; }
 });
 if (location.hash === '#truck') openSheet('truck-sheet', $('[data-open="truck-sheet"]'));
 

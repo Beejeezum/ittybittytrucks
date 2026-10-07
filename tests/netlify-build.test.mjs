@@ -17,6 +17,8 @@ test('photo confirmation stays public-safe', async () => {
   const confirmation = html.match(/<div class="saved-state" id="photo-success"[\s\S]*?<\/div>/)?.[0] || '';
   assert.match(confirmation, /Photo received/);
   assert.doesNotMatch(confirmation, /dashboard|admin/i);
+  assert.match(html, /id="photo-license" type="checkbox" required/);
+  assert.match(html, /website, social media, advertising, email, press/);
 });
 
 test('brand, social sharing, and install metadata use the approved assets', async () => {
@@ -60,6 +62,8 @@ test('privacy policy is prominent, specific to current collection, and ad-ready'
   assert.match(privacy, /We do not sell personal information/);
   assert.match(privacy, /independent, privately run art project/);
   assert.match(privacy, /not currently a motor vehicle dealership/);
+  assert.match(privacy, /non-exclusive, worldwide, royalty-free license/);
+  assert.match(privacy, /id="photo-permission"/);
   assert.match(privacy, /mailto:beejeezum@gmail\.com/);
 });
 

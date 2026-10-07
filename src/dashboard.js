@@ -70,7 +70,7 @@ function renderEvent(event) {
   let details = '';
   if (event.kind === 'follow' || event.kind === 'truck') details = event.contact_value;
   else if (event.kind === 'love') details = 'A hello from someone out there. ♡';
-  else if (event.kind === 'photo') details = 'Sent privately to you.';
+  else if (event.kind === 'photo') details = event.source ? 'Marketing permission recorded.' : 'Private upload; no marketing permission recorded.';
   else if (event.kind === 'visit') details = [event.contact_type === 'mobile' ? 'On a phone' : event.contact_type === 'tablet' ? 'On a tablet' : 'On a computer', event.source ? `from ${event.source}` : 'direct visit'].join(' · ');
   content.append(element('p', 'event-details', details));
   if (event.kind === 'photo') {

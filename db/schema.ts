@@ -28,6 +28,8 @@ export const sightings = sqliteTable('truck_sightings', {
   viewKey: text('view_key').notNull(),
   byteSize: integer('byte_size').notNull(),
   createdAt: text('created_at').notNull(),
+  licenseVersion: text('license_version'),
+  licenseConfirmedAt: text('license_confirmed_at'),
 }, (table) => [uniqueIndex('idx_truck_sightings_request_key').on(table.requestKey)]);
 
 export const limits = sqliteTable('submission_limits', {

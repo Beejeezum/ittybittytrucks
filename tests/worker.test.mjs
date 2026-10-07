@@ -6,6 +6,8 @@ import path from 'node:path';
 import worker from '../dist/server/index.js';
 import { createLocalEnv } from '../scripts/local-env.mjs';
 
+const PHOTO_LICENSE = { 'X-Photo-License': 'ibt-photo-license-v1' };
+
 async function setup(t) {
   const directory = await mkdtemp(path.join(tmpdir(), 'itty-truck-test-'));
   const local = await createLocalEnv(directory);
@@ -30,7 +32,7 @@ test('follow signup and truck inquiry save distinct consent; retries do not dupl
   assert.equal(rows[0].contact_value, 'mobile-qa@example.invalid');
   assert.match(rows[0].consent, /Email updates/);
   assert.equal(rows[1].contact_value, '+12025550123');
-  assert.match(rows[1].consent, /No subscription/);
+  assert.match(rows[1].consent, /No order, deposit, dealership transaction/);
 });
 
 test('invalid, cross-site, oversized, and bot submissions are rejected before saving', async (t) => {
@@ -55,11 +57,14 @@ test('love persists once per visitor and is restored on reload', async (t) => {
 test('photo upload persists privately and retries do not duplicate', async (t) => {
   const { send, sqlite, url, env } = await setup(t);
   const bytes = new Uint8Array([255, 216, 255, 224, 0, 2, 255, 217]);
-  const headers = { 'Content-Type': 'image/jpeg', 'X-Request-ID': crypto.randomUUID() };
+  const headers = { 'Content-Type': 'image/jpeg', 'X-Request-ID': crypto.randomUUID(), ...PHOTO_LICENSE };
+  assert.equal((await send('/api/photo', bytes, { 'Content-Type': 'image/jpeg', 'X-Request-ID': crypto.randomUUID() })).status, 400);
   assert.equal((await send('/api/photo', bytes, headers)).status, 200);
   assert.equal((await send('/api/photo', bytes, headers)).status, 200);
   const rows = sqlite.prepare('SELECT * FROM truck_sightings').all();
   assert.equal(rows.length, 1);
+  assert.equal(rows[0].license_version, 'ibt-photo-license-v1');
+  assert.ok(rows[0].license_confirmed_at);
   assert.equal((await env.BUCKET.get(rows[0].object_key)).body.length, bytes.length);
   const privateUrl = url + '/sighting/' + rows[0].id;
   assert.equal((await worker.fetch(new Request(privateUrl + '/wrong'), env)).status, 404);
@@ -79,7 +84,7 @@ test('storage failure does not return success or keep orphaned images', async (t
   const original = env.DB.prepare;
   env.DB.prepare = (sql) => sql.startsWith('INSERT INTO truck_sightings') ? { bind: () => ({ run: async () => { throw new Error('Simulated storage failure'); } }) } : original(sql);
   env.BUCKET = { put: async () => { objects++; }, delete: async () => { objects--; } };
-  const photo = new Request(url + '/api/photo', { method: 'POST', headers: { Origin: url, Cookie: cookie, 'Content-Type': 'image/jpeg', 'X-Request-ID': crypto.randomUUID() }, body: new Uint8Array([255, 216, 255, 217]) });
+  const photo = new Request(url + '/api/photo', { method: 'POST', headers: { Origin: url, Cookie: cookie, 'Content-Type': 'image/jpeg', 'X-Request-ID': crypto.randomUUID(), ...PHOTO_LICENSE }, body: new Uint8Array([255, 216, 255, 217]) });
   assert.equal((await worker.fetch(photo, env)).status, 503);
   assert.equal(objects, 0);
 });
@@ -103,7 +108,7 @@ test('landing and redirects work without exposing contacts', async (t) => {
 
 test('dashboard and photo routes fail closed for anonymous and nonowner identities', async (t) => {
   const { env, url, send, sqlite } = await setup(t);
-  const photoHeaders = { 'Content-Type': 'image/jpeg', 'X-Request-ID': crypto.randomUUID() };
+  const photoHeaders = { 'Content-Type': 'image/jpeg', 'X-Request-ID': crypto.randomUUID(), ...PHOTO_LICENSE };
   await send('/api/photo', new Uint8Array([255, 216, 255, 217]), photoHeaders);
   const photo = sqlite.prepare('SELECT id FROM truck_sightings').get();
   const paths = ['/dashboard', '/dashboard/', '/api/dashboard', '/api/dashboard/export', '/api/dashboard/photos/' + photo.id];

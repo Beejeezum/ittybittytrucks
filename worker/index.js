@@ -3,6 +3,7 @@ import { ownerAccess, privateHeaders, dashboardData, ownerPhoto, exportContacts 
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_PHOTO = 2 * 1024 * 1024;
+const PHOTO_LICENSE_VERSION = 'ibt-photo-license-v1';
 const LEGACY = new Map([['/hi/teal', '/'], ['/trucks', '/#about'], ['/trucks/teal-sambar', '/#about'], ['/tiny-truck-101', '/#about'], ['/our-story', '/'], ['/find-me-one', '/#truck'], ['/index.html', '/']]);
 class HttpError extends Error { constructor(status, message) { super(message); this.status = status; } }
 function database(env) { if (!env.DB) throw new Error('DB binding unavailable'); return env.DB; }
@@ -77,13 +78,14 @@ async function contact(request, env, key) {
   const prior = await db.prepare('SELECT visitor_key FROM truck_requests WHERE request_key = ?').bind(requestId).first();
   if (prior) { if (prior.visitor_key !== key) throw new HttpError(409, 'Please refresh and try again.'); return json({ ok: true }); }
   await rateLimit(request, env, key, 'contact', 10);
-  const consent = intent === 'follow' ? 'Email updates about trucks, local happenings, and new projects.' : 'Reply about finding a truck. No subscription to email updates.';
+  const consent = intent === 'follow' ? 'Email updates about trucks, local happenings, and new projects.' : 'Reply about the independent truck project. No order, deposit, dealership transaction, or subscription to email updates.';
   await db.prepare('INSERT INTO truck_requests (id, request_key, visitor_key, intent, contact_type, contact_value, consent, created_at, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(request_key) DO NOTHING').bind(crypto.randomUUID(), requestId, key, intent, method, value, consent, new Date().toISOString(), 'new').run();
   return json({ ok: true });
 }
 async function photo(request, env, key) {
   const requestId = request.headers.get('X-Request-ID');
   if (!UUID.test(requestId || '')) throw new HttpError(400, 'Choose your photo again, then send it.');
+  if (request.headers.get('X-Photo-License') !== PHOTO_LICENSE_VERSION) throw new HttpError(400, 'Please confirm the photo permission before sending.');
   if (request.headers.get('Content-Type') !== 'image/jpeg') throw new HttpError(415, 'Choose a photo using the button on this page.');
   const bytes = await readBounded(request, MAX_PHOTO);
   if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) throw new HttpError(400, 'That photo didn’t load. Try another one.');
@@ -95,7 +97,7 @@ async function photo(request, env, key) {
   const objectKey = `truck-sightings/${now.slice(0, 7)}/${id}.jpg`; const store = bucket(env);
   await store.put(objectKey, bytes, { httpMetadata: { contentType: 'image/jpeg' } });
   try {
-    const result = await db.prepare('INSERT INTO truck_sightings (id, request_key, visitor_key, object_key, view_key, byte_size, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(request_key) DO NOTHING').bind(id, requestId, key, objectKey, crypto.randomUUID() + crypto.randomUUID(), bytes.length, now).run();
+    const result = await db.prepare('INSERT INTO truck_sightings (id, request_key, visitor_key, object_key, view_key, byte_size, created_at, license_version, license_confirmed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(request_key) DO NOTHING').bind(id, requestId, key, objectKey, crypto.randomUUID() + crypto.randomUUID(), bytes.length, now, PHOTO_LICENSE_VERSION, now).run();
     if (result.meta.changes === 0) await store.delete(objectKey);
   } catch (error) { await store.delete(objectKey).catch(() => {}); throw error; }
   return json({ ok: true });
