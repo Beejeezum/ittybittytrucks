@@ -21,7 +21,7 @@ test('photo confirmation stays public-safe', async () => {
 
 test('brand, social sharing, and install metadata use the approved assets', async () => {
   const html = await readFile(path.join(root, 'src/landing.html'), 'utf8');
-  assert.match(html, /<title>Itty Bitty Trucks \| Kei Trucks in Boca Raton<\/title>/);
+  assert.match(html, /<title>Itty Bitty Trucks \| A Kei Truck Art Project<\/title>/);
   assert.match(html, /src="\/assets\/itty-bitty-trucks-logo\.png"/);
   assert.match(html, /property="og:image" content="https:\/\/ittybittytrucks\.netlify\.app\/assets\/social-share\.png"/);
   assert.match(html, /name="twitter:card" content="summary_large_image"/);
@@ -42,7 +42,7 @@ test('browser titles are concise and descriptive on every HTML page', async () =
   const dashboard = await readFile(path.join(root, 'src/dashboard.html'), 'utf8');
   const notFound = await readFile(path.join(root, 'src/404.html'), 'utf8');
   const privacy = await readFile(path.join(root, 'src/privacy.html'), 'utf8');
-  assert.match(landing, /<title>Itty Bitty Trucks \| Kei Trucks in Boca Raton<\/title>/);
+  assert.match(landing, /<title>Itty Bitty Trucks \| A Kei Truck Art Project<\/title>/);
   assert.match(dashboard, /<title>Owner Dashboard \| Itty Bitty Trucks<\/title>/);
   assert.match(notFound, /<title>Page Not Found \| Itty Bitty Trucks<\/title>/);
   assert.match(privacy, /<title>Privacy Policy \| Itty Bitty Trucks<\/title>/);
@@ -53,11 +53,13 @@ test('privacy policy is prominent, specific to current collection, and ad-ready'
   const privacy = await readFile(path.join(root, 'src/privacy.html'), 'utf8');
   assert.match(landing, /href="\/privacy\/">Privacy<\/a>/);
   assert.match(privacy, /Email updates/);
-  assert.match(privacy, /Truck inquiries/);
+  assert.match(privacy, /Truck conversations/);
   assert.match(privacy, /Truck sightings/);
   assert.match(privacy, /ib_visit/);
   assert.match(privacy, /We do not currently use the TikTok Pixel/);
   assert.match(privacy, /We do not sell personal information/);
+  assert.match(privacy, /independent, privately run art project/);
+  assert.match(privacy, /not currently a motor vehicle dealership/);
   assert.match(privacy, /mailto:beejeezum@gmail\.com/);
 });
 

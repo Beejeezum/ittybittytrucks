@@ -127,7 +127,7 @@ async function contact(request: Request, context: Context, key: string) {
     return reply({ ok: true });
   }
   await rateLimit(context, key, 'contact', 10);
-  const consent = intent === 'follow' ? 'Email updates about trucks, local happenings, and new projects.' : 'Reply about finding a truck. No subscription to email updates.';
+  const consent = intent === 'follow' ? 'Email updates about trucks, local happenings, and new projects.' : 'Reply about the independent truck project. No order, deposit, dealership transaction, or subscription to email updates.';
   await db.sql`
     INSERT INTO truck_requests (id, request_key, visitor_key, intent, contact_type, contact_value, consent, created_at, status)
     VALUES (${crypto.randomUUID()}, ${requestId}, ${key}, ${intent}, ${method}, ${value}, ${consent}, ${new Date().toISOString()}, 'new')

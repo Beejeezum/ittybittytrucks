@@ -88,7 +88,7 @@ test('landing and redirects work without exposing contacts', async (t) => {
   const { env, url } = await setup(t);
   const response = await worker.fetch(new Request(url), env);
   assert.equal(response.status, 200);
-  assert.match(await response.text(), /Truck updates/);
+  assert.match(await response.text(), /Project updates/);
   const privacy = await worker.fetch(new Request(url + '/privacy/'), env);
   assert.equal(privacy.status, 200);
   assert.match(await privacy.text(), /Privacy Policy \| Itty Bitty Trucks/);
