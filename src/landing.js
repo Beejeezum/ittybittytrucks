@@ -22,23 +22,6 @@ async function post(path, payload) {
   await hello();
   return api(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
 }
-function loveSaved() {
-  $('#love-button').setAttribute('aria-pressed', 'true');
-  $('#love-label').textContent = 'Right back at you';
-  $('#love-button .heart').textContent = '♥';
-}
-hello().then((state) => { if (state.loved) loveSaved(); }).catch(() => {});
-$('#love-button').addEventListener('click', async () => {
-  const button = $('#love-button');
-  if (button.getAttribute('aria-pressed') === 'true') return;
-  button.disabled = true;
-  $('#love-label').textContent = 'Sending…';
-  $('#love-status').textContent = '';
-  try { await post('/api/signal', { kind: 'love', value: 'yes' }); loveSaved(); $('#love-status').textContent = 'Right back at you. ♡'; }
-  catch (error) { $('#love-label').textContent = 'Send a little love'; $('#love-status').textContent = error.message; }
-  finally { button.disabled = false; }
-});
-
 let sheetTrigger;
 function openSheet(id, trigger) {
   const dialog = document.getElementById(id);
@@ -146,7 +129,6 @@ $('#photo-form').addEventListener('submit', async (event) => {
   finally { button.disabled = !photoBlob; $('#sighting-photo').disabled = false; button.textContent = 'Send photo'; }
 });
 if (location.hash === '#truck') openSheet('truck-sheet', $('[data-open="truck-sheet"]'));
-if (location.hash === '#about') openSheet('info-sheet', $('[data-open="info-sheet"]'));
 
 // Presence is independent of forms and runs only while this page is visible.
 const visitSessionId = requestID();
