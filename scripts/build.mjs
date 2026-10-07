@@ -5,8 +5,12 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const out = path.join(root, 'dist');
 const config = JSON.parse(await readFile(path.join(root, 'site.config.json'), 'utf8'));
 const html = (await readFile(path.join(root, 'src/landing.html'), 'utf8')).replace('{{ROBOTS}}', config.indexable ? 'index, follow' : 'noindex, nofollow');
+const privacy = (await readFile(path.join(root, 'src/privacy.html'), 'utf8')).replace('{{ROBOTS}}', config.indexable ? 'index, follow' : 'noindex, nofollow');
 const assets = {
   '/': { type: 'text/html; charset=utf-8', body: html },
+  '/privacy': { type: 'text/html; charset=utf-8', body: privacy },
+  '/privacy/': { type: 'text/html; charset=utf-8', body: privacy },
+  '/privacy.css': { type: 'text/css; charset=utf-8', body: await readFile(path.join(root, 'src/privacy.css'), 'utf8') },
   '/styles.css': { type: 'text/css; charset=utf-8', body: await readFile(path.join(root, 'src/landing.css'), 'utf8') },
   '/site.js': { type: 'text/javascript; charset=utf-8', body: await readFile(path.join(root, 'src/landing.js'), 'utf8') },
   '/favicon.ico': { type: 'image/x-icon', body: (await readFile(path.join(root, 'assets/favicon.ico'))).toString('base64'), base64: true },

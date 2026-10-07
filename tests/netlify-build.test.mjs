@@ -41,9 +41,24 @@ test('browser titles are concise and descriptive on every HTML page', async () =
   const landing = await readFile(path.join(root, 'src/landing.html'), 'utf8');
   const dashboard = await readFile(path.join(root, 'src/dashboard.html'), 'utf8');
   const notFound = await readFile(path.join(root, 'src/404.html'), 'utf8');
+  const privacy = await readFile(path.join(root, 'src/privacy.html'), 'utf8');
   assert.match(landing, /<title>Itty Bitty Trucks \| Kei Trucks in Boca Raton<\/title>/);
   assert.match(dashboard, /<title>Owner Dashboard \| Itty Bitty Trucks<\/title>/);
   assert.match(notFound, /<title>Page Not Found \| Itty Bitty Trucks<\/title>/);
+  assert.match(privacy, /<title>Privacy Policy \| Itty Bitty Trucks<\/title>/);
+});
+
+test('privacy policy is prominent, specific to current collection, and ad-ready', async () => {
+  const landing = await readFile(path.join(root, 'src/landing.html'), 'utf8');
+  const privacy = await readFile(path.join(root, 'src/privacy.html'), 'utf8');
+  assert.match(landing, /href="\/privacy\/">Privacy<\/a>/);
+  assert.match(privacy, /Email updates/);
+  assert.match(privacy, /Truck inquiries/);
+  assert.match(privacy, /Truck sightings/);
+  assert.match(privacy, /ib_visit/);
+  assert.match(privacy, /We do not currently use the TikTok Pixel/);
+  assert.match(privacy, /We do not sell personal information/);
+  assert.match(privacy, /mailto:beejeezum@gmail\.com/);
 });
 
 test('the singular domain permanently redirects to the plural domain', async () => {
